@@ -1,65 +1,409 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+// ============================================================
+// 🏠 PAGE D'ACCUEIL — Chasse au Logo
+// Fichier : app/page.tsx
+//
+// Design : Arcade rétro-futuriste sombre
+// Animations : CSS keyframes via style inline
+// Liens : /game (jouer) et /leaderboard (classement)
+//
+// ⚠️ IMPORTANT : Ajouter dans app/layout.tsx dans le <head> :
+// <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+// ============================================================
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+
+// Polices définies comme constantes pour éviter la répétition
+const FONT_ARCADE = "'Black Ops One', cursive";
+const FONT_MONO   = "'Share Tech Mono', monospace";
+
+// ─────────────────────────────────────────────
+// 🎨 LISTE DES LOGOS DISPONIBLES
+// Chaque logo a un emoji, un nom et une couleur d'accent
+// Pour en ajouter : copie un objet et change les valeurs
+// ─────────────────────────────────────────────
+const LOGOS = [
+  { emoji: "🎯", name: "Cible",   color: "#facc15", shadow: "rgba(250,204,21,0.5)"  },
+  { emoji: "🚀", name: "Fusée",   color: "#22d3ee", shadow: "rgba(34,211,238,0.5)"  },
+  { emoji: "⭐", name: "Étoile",  color: "#a78bfa", shadow: "rgba(167,139,250,0.5)" },
+  { emoji: "🔥", name: "Feu",     color: "#f97316", shadow: "rgba(249,115,22,0.5)"  },
+  { emoji: "💎", name: "Diamant", color: "#34d399", shadow: "rgba(52,211,153,0.5)"  },
+];
+
+// ─────────────────────────────────────────────
+// 🎲 COMPOSANT — Particule flottante
+// Petits points lumineux animés en arrière-plan
+// Chaque particule a une position et vitesse aléatoire
+// ─────────────────────────────────────────────
+function Particle({ index }: { index: number }) {
+  // On utilise index pour varier les propriétés
+  const size = [4, 6, 3, 5, 4][index % 5];
+  const left = (index * 17 + 5) % 95;
+  const delay = (index * 0.7) % 4;
+  const duration = 3 + (index % 4);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div
+      className="absolute rounded-full opacity-60"
+      style={{
+        width: size,
+        height: size,
+        left: `${left}%`,
+        bottom: "-10px",
+        background: index % 3 === 0 ? "#facc15" : index % 3 === 1 ? "#22d3ee" : "#f472b6",
+        animation: `floatUp ${duration}s ${delay}s infinite ease-in`,
+      }}
+    />
+  );
+}
+
+// ─────────────────────────────────────────────
+// 📊 COMPOSANT — Stat Card
+// Affiche une statistique clé sur la page d'accueil
+// ─────────────────────────────────────────────
+function StatCard({
+  value,
+  label,
+  color,
+  delay,
+}: {
+  value: string;
+  label: string;
+  color: string;
+  delay: string;
+}) {
+  return (
+    <div
+      className="text-center px-6 py-4 rounded-2xl bg-slate-800/60 border border-slate-700/50 backdrop-blur-sm"
+      style={{ animation: `fadeSlideUp 0.6s ${delay} both`, fontFamily: FONT_MONO }}
+    >
+      <p className={`text-3xl font-black ${color}`}>{value}</p>
+      <p className="text-slate-400 text-xs uppercase tracking-widest mt-1">{label}</p>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// 🏠 COMPOSANT PRINCIPAL — Page d'accueil
+// ─────────────────────────────────────────────
+export default function HomePage() {
+  // État pour l'effet de "glitch" sur le titre
+  const [glitch, setGlitch] = useState(false);
+
+  // ── Logo sélectionné par le joueur (index dans LOGOS)
+  // Par défaut : le premier logo (🎯)
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const selectedLogo = LOGOS[selectedIndex];
+
+  // ── Effet glitch automatique toutes les 4 secondes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGlitch(true);
+      setTimeout(() => setGlitch(false), 400);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <>
+      {/* ── Styles CSS globaux (keyframes) ── */}
+      {/* ⚠️ Le @import Google Fonts doit être dans app/layout.tsx */}
+      <style>{`
+        /* Animation : particules qui montent */
+        @keyframes floatUp {
+          0%   { transform: translateY(0) scale(1); opacity: 0.6; }
+          80%  { opacity: 0.4; }
+          100% { transform: translateY(-100vh) scale(0.3); opacity: 0; }
+        }
+
+        /* Animation : entrée par le bas */
+        @keyframes fadeSlideUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Animation : pulsation du logo cible */
+        @keyframes targetPulse {
+          0%, 100% { transform: scale(1) rotate(0deg); }
+          25%      { transform: scale(1.15) rotate(-5deg); }
+          75%      { transform: scale(0.95) rotate(5deg); }
+        }
+
+        /* Animation : scanline rétro */
+        @keyframes scanline {
+          0%   { transform: translateY(-100%); }
+          100% { transform: translateY(100vh); }
+        }
+
+        /* Animation : clignotement du curseur */
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0; }
+        }
+
+        /* Animation : glitch du titre */
+        @keyframes glitchShift {
+          0%   { clip-path: inset(0 0 90% 0); transform: translate(-4px, 0); }
+          25%  { clip-path: inset(40% 0 50% 0); transform: translate(4px, 0); }
+          50%  { clip-path: inset(70% 0 10% 0); transform: translate(-2px, 0); }
+          100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+        }
+
+        /* Animation : bordure lumineuse bouton */
+        @keyframes borderGlow {
+          0%, 100% { box-shadow: 0 0 20px rgba(250,204,21,0.3), inset 0 0 20px rgba(250,204,21,0.05); }
+          50%       { box-shadow: 0 0 40px rgba(250,204,21,0.6), inset 0 0 30px rgba(250,204,21,0.1); }
+        }
+
+        /* Effet glitch — pseudo-éléments sur le wrapper du titre */
+        .glitch-active {
+          position: relative;
+        }
+        .glitch-active::before {
+          content: attr(data-text);
+          position: absolute;
+          inset: 0;
+          color: #22d3ee;
+          animation: glitchShift 0.4s steps(2) forwards;
+          pointer-events: none;
+        }
+        .glitch-active::after {
+          content: attr(data-text);
+          position: absolute;
+          inset: 0;
+          color: #f472b6;
+          animation: glitchShift 0.4s steps(2) 0.05s forwards;
+          opacity: 0.7;
+          pointer-events: none;
+        }
+
+        /* Bouton CTA animé */
+        .btn-play {
+          animation: borderGlow 2s ease-in-out infinite;
+          transition: transform 0.2s;
+        }
+        .btn-play:hover  { transform: scale(1.05) translateY(-2px); }
+        .btn-play:active { transform: scale(0.97); }
+      `}</style>
+
+      <main
+        className="min-h-screen bg-[#060d1a] text-white overflow-hidden relative flex flex-col"
+        style={{ fontFamily: "'Share Tech Mono', monospace" }}
+      >
+
+        {/* ── Grille de fond rétro ─────────── */}
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(250,204,21,0.8) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(250,204,21,0.8) 1px, transparent 1px)
+            `,
+            backgroundSize: "60px 60px",
+          }}
+        />
+
+        {/* ── Scanline rétro ──────────────── */}
+        <div
+          className="absolute inset-x-0 h-32 pointer-events-none z-10 opacity-[0.03]"
+          style={{
+            background: "linear-gradient(transparent, rgba(250,204,21,0.5), transparent)",
+            animation: "scanline 6s linear infinite",
+          }}
+        />
+
+        {/* ── Particules flottantes ────────── */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {Array.from({ length: 18 }).map((_, i) => (
+            <Particle key={i} index={i} />
+          ))}
+        </div>
+
+        {/* ── Lueur centrale ──────────────── */}
+        <div
+          className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          style={{
+            width: "600px",
+            height: "400px",
+            background: "radial-gradient(ellipse, rgba(250,204,21,0.06) 0%, transparent 70%)",
+          }}
+        />
+
+        {/* ══════════════════════════════════
+            CONTENU PRINCIPAL
+        ══════════════════════════════════ */}
+        <div className="relative z-20 flex flex-col items-center justify-center min-h-screen px-4 text-center">
+
+          {/* ── Badge "NEW GAME" ─────────── */}
+          <div
+            className="mb-6"
+            style={{ animation: "fadeSlideUp 0.5s 0.1s both", fontFamily: FONT_MONO }}
+          >
+            <span className="px-4 py-1.5 bg-yellow-400/10 border border-yellow-400/40 rounded-full text-yellow-400 text-xs uppercase tracking-[0.3em]">
+              ● INSERT COIN TO PLAY
+            </span>
+          </div>
+
+          {/* ── Titre principal avec effet glitch ──
+              Un seul wrapper .glitch-active pour les deux lignes
+              data-text = texte complet pour les pseudo-éléments
+          ── */}
+          <div
+            className={`mb-8 relative select-none ${glitch ? "glitch-active" : ""}`}
+            data-text="CHASSE AU LOGO !"
+            style={{ animation: "fadeSlideUp 0.5s 0.2s both" }}
+          >
+            {/* Ligne 1 — h1 unique de la page */}
+            <h1
+              className="text-6xl md:text-8xl tracking-tight"
+              style={{ fontFamily: FONT_ARCADE, lineHeight: 1, color: "#ffffff" }}
+            >
+              CHASSE AU
+            </h1>
+
+            {/* Ligne 2 — h2 pour respecter la hiérarchie SEO */}
+            <h2
+              className="text-6xl md:text-8xl tracking-tight"
+              style={{
+                fontFamily: FONT_ARCADE,
+                lineHeight: 1,
+                WebkitTextStroke: "2px #facc15",
+                color: "transparent",
+                textShadow: "0 0 40px rgba(250,204,21,0.4)",
+              }}
+            >
+              LOGO !
+            </h2>
+          </div>
+
+          {/* ── Logo animé (préview du logo choisi) ── */}
+          <div
+            className="mb-6"
+            style={{ animation: "fadeSlideUp 0.5s 0.35s both" }}
+          >
+            <div
+              className="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300"
+              style={{
+                background: selectedLogo.color,
+                animation: "targetPulse 2s ease-in-out infinite",
+                boxShadow: `0 0 30px ${selectedLogo.shadow}, 0 0 60px ${selectedLogo.shadow}`,
+              }}
+            >
+              {/* Le logo change en temps réel selon la sélection */}
+              <span className="text-5xl">{selectedLogo.emoji}</span>
+            </div>
+            <p
+              className="text-xs mt-2 uppercase tracking-widest"
+              style={{ color: selectedLogo.color, fontFamily: FONT_MONO }}
+            >
+              {selectedLogo.name}
+            </p>
+          </div>
+
+          {/* ── Sélecteur de logos ───────────────
+              Le joueur clique sur un logo pour le choisir
+              Le logo sélectionné est mis en surbrillance
+          ── */}
+          <div
+            className="flex gap-3 mb-8"
+            style={{ animation: "fadeSlideUp 0.5s 0.42s both" }}
+          >
+            {LOGOS.map((logo, index) => (
+              <button
+                key={index}
+                onClick={() => setSelectedIndex(index)}
+                aria-label={`Choisir le logo ${logo.name}`}
+                className="relative w-14 h-14 rounded-xl flex items-center justify-center text-2xl transition-all duration-200 hover:scale-110 active:scale-95"
+                style={{
+                  // Si sélectionné → bordure colorée + fond teinté
+                  // Sinon → fond neutre sombre
+                  background: selectedIndex === index
+                    ? `${logo.color}22`  // couleur avec 13% d'opacité
+                    : "rgba(30,41,59,0.8)",
+                  border: selectedIndex === index
+                    ? `2px solid ${logo.color}`
+                    : "2px solid rgba(100,116,139,0.3)",
+                  boxShadow: selectedIndex === index
+                    ? `0 0 12px ${logo.shadow}`
+                    : "none",
+                }}
+              >
+                {logo.emoji}
+
+                {/* Indicateur de sélection — petit point en bas */}
+                {selectedIndex === index && (
+                  <span
+                    className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full"
+                    style={{ background: logo.color }}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* ── Description ─────────────── */}
+          <p
+            className="text-slate-400 text-sm md:text-base max-w-md mb-10 leading-relaxed"
+            style={{ animation: "fadeSlideUp 0.5s 0.4s both", fontFamily: FONT_MONO }}
+          >
+            Le logo se déplace aléatoirement sur l&apos;écran.<br />
+            <span className="text-cyan-400">Attrape-le 5 fois</span> le plus vite possible.<br />
+            Bats le record. Prends la 1ère place.
+            <span
+              className="inline-block w-2 h-4 bg-yellow-400 ml-1 align-middle"
+              style={{ animation: "blink 1s step-end infinite" }}
+            />
+          </p>
+
+          {/* ── Boutons CTA ─────────────── */}
+          <div
+            className="flex flex-col sm:flex-row gap-4 mb-14"
+            style={{ animation: "fadeSlideUp 0.5s 0.5s both" }}
+          >
+            {/* Bouton principal : Jouer
+                On passe le logo choisi via un paramètre d'URL
+                ex: /game?logo=🚀
+                La page /game lira ce paramètre pour afficher le bon logo */}
+            <Link
+              href={`/game?logo=${encodeURIComponent(selectedLogo.emoji)}&color=${encodeURIComponent(selectedLogo.color)}&shadow=${encodeURIComponent(selectedLogo.shadow)}`}
+              className="btn-play font-arcade text-xl px-10 py-4 bg-yellow-400 text-black rounded-2xl tracking-wider"
+              style={{ background: selectedLogo.color }}
+            >
+              ▶ JOUER
+            </Link>
+
+            {/* Bouton secondaire : Classement */}
+            <Link
+              href="/leaderboard"
+              className="font-arcade text-xl px-10 py-4 bg-transparent border-2 border-slate-600 hover:border-yellow-400/60 text-slate-300 hover:text-yellow-400 rounded-2xl transition-all duration-200 tracking-wider hover:scale-105"
+            >
+              🏆 CLASSEMENT
+            </Link>
+          </div>
+
+          {/* ── Stats rapides ───────────── */}
+          <div
+            className="grid grid-cols-3 gap-4 max-w-sm w-full"
+            style={{ animation: "fadeSlideUp 0.5s 0.6s both" }}
+          >
+            <StatCard value="5" label="Logos" color="text-yellow-400" delay="0.65s" />
+            <StatCard value="∞" label="Essais" color="text-cyan-400" delay="0.7s" />
+            <StatCard value="#1" label="Objectif" color="text-pink-400" delay="0.75s" />
+          </div>
+
+        </div>
+
+        {/* ── Footer ──────────────────────── */}
+        <footer
+          className="relative z-20 text-center pb-6 text-slate-700 text-xs"
+          style={{ animation: "fadeSlideUp 0.5s 0.8s both", fontFamily: FONT_MONO }}
+        >
+          NEXT.JS · TAILWIND · NEONDB · WINDSURF
+        </footer>
+
+      </main>
+    </>
   );
 }
