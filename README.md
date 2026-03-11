@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🎯 Chasse au Logo ! — v2
 
 > Défi 3 — Coordonnées et Aléatoire  
@@ -441,3 +442,7 @@ Projet réalisé dans le cadre d'une formation en développement web.
 ## 📄 Licence
 
 MIT — libre d'utilisation à des fins éducatives.
+=======
+# DEFI3_V2.0.0
+The second version of my little project done with NEXTJS based on typescript and tailwindCSS, it's a game named chasing the logo which principal objectif is to touch the logo on the screen
+>>>>>>> 301da24ee5a75027f55c8ab2d614251dec1a657b
