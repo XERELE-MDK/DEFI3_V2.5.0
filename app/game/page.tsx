@@ -15,6 +15,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useSound } from "@/hooks/use-sound";
+import { useTheme } from "@/hooks/use-theme";
 
 // ─────────────────────────────────────────────
 // 📐 CONSTANTES
@@ -275,6 +276,9 @@ export default function GamePage() {
   // Hook audio — toute la logique son est ici
   const { startMusic, stopMusic, playClick, playVictory, toggleMute, isMuted } = useSound(music);
 
+  // Hook thème — lit ?theme= dans l'URL + sauvegarde localStorage
+  const { theme: t } = useTheme();
+
   // SOLO : objectsCount=1, timeLimit=0  → on compte les clics jusqu'à SOLO_TARGET
   // DUO/TRIO : objectsCount=2/3, timeLimit=30 → compte à rebours
   const isSolo = mode === "solo";
@@ -408,12 +412,13 @@ export default function GamePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0f172a] text-white font-mono flex flex-col">
+    <main className={`min-h-screen ${t.bg} ${t.text} flex flex-col transition-colors duration-500`}
+      style={{ fontFamily: t.font }}>
 
       {/* ── En-tête ── */}
-      <header className="flex items-center justify-between px-4 py-3 bg-[#1e293b] border-b border-slate-700 flex-wrap gap-2">
+      <header className={`flex items-center justify-between px-4 py-3 ${t.header} border-b flex-wrap gap-2`}>
         <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-lg font-black tracking-widest text-yellow-400 uppercase">
+          <h1 className={`text-lg font-black tracking-widest ${t.accent} uppercase`}>
             {logo.emoji} Chasse au Logo
           </h1>
           {/* Badge mode */}
@@ -431,11 +436,10 @@ export default function GamePage() {
         </div>
 
         <div className="flex gap-4 items-center">
-          {/* Bouton mute — coupe tous les sons instantanément */}
+          {/* Bouton mute */}
           <button
             onClick={toggleMute}
-            className="text-xl w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-            style={{ background: "rgba(30,41,59,0.8)", border: "1px solid rgba(100,116,139,0.3)" }}
+            className={`text-xl w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${t.badge}`}
             aria-label={isMuted ? "Activer le son" : "Couper le son"}
           >
             {isMuted ? "🔇" : "🔊"}
@@ -443,23 +447,23 @@ export default function GamePage() {
 
           {/* Score */}
           <div className="text-center">
-            <p className="text-xs text-slate-400 uppercase tracking-widest">
+            <p className={`text-xs ${t.subtext} uppercase tracking-widest`}>
               {isSolo ? "Clics" : "Score"}
             </p>
-            <p className="text-2xl font-black text-white">
+            <p className={`text-2xl font-black ${t.text}`}>
               {score}
-              {isSolo && <span className="text-slate-500 text-sm">/{SOLO_TARGET}</span>}
+              {isSolo && <span className={`${t.subtext} text-sm`}>/{SOLO_TARGET}</span>}
             </p>
           </div>
           {/* Timer */}
           <div className="text-center">
-            <p className="text-xs text-slate-400 uppercase tracking-widest">
+            <p className={`text-xs ${t.subtext} uppercase tracking-widest`}>
               {isSolo ? "Temps" : "Restant"}
             </p>
             <p className={`text-2xl font-black ${
-              !isSolo && timer <= 5 ? "text-red-400" :
-              !isSolo && timer <= 10 ? "text-orange-400"
-              : "text-cyan-400"
+              !isSolo && timer <= 5  ? t.timerAlert :
+              !isSolo && timer <= 10 ? t.timerWarn
+              : t.timerNormal
             }`}>
               {timer}s
             </p>
@@ -468,11 +472,11 @@ export default function GamePage() {
       </header>
 
       {/* ── Zone de jeu ── */}
-      <div ref={gameAreaRef} className="relative flex-1 overflow-hidden cursor-crosshair" style={{ minHeight: "500px" }}>
+      <div ref={gameAreaRef} className={`relative flex-1 overflow-hidden cursor-crosshair ${t.gameArea}`} style={{ minHeight: "500px" }}>
 
         {/* Grille décorative */}
         <div className="absolute inset-0 opacity-10" style={{
-          backgroundImage: "linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px)",
+          backgroundImage: `linear-gradient(${t.gridColor} 1px, transparent 1px), linear-gradient(90deg, ${t.gridColor} 1px, transparent 1px)`,
           backgroundSize: "40px 40px",
         }} />
 
@@ -481,8 +485,8 @@ export default function GamePage() {
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 z-10 px-4">
             <div className="text-center space-y-2">
               {isSolo ? (
-                <p className="text-slate-400 text-lg">
-                  Attrape le logo <span className="text-yellow-400 font-bold">{SOLO_TARGET} fois</span>
+                <p className={`${t.subtext} text-lg`}>
+                  Attrape le logo <span className={`${t.accent} font-bold`}>{SOLO_TARGET} fois</span>
                   <br />le plus vite possible !
                 </p>
               ) : (
@@ -540,25 +544,23 @@ export default function GamePage() {
 
         {/* ── Barre de progression ── */}
         {isPlaying && (
-          <div className="absolute bottom-0 left-0 right-0 h-2 bg-slate-700">
+          <div className={`absolute bottom-0 left-0 right-0 h-2 ${t.progressBg}`}>
             <div
               className="h-full transition-all duration-300"
               style={{
-                // SOLO → progression vers SOLO_TARGET
-                // DUO/TRIO → décompte du temps restant
                 width: isSolo
                   ? `${(score / SOLO_TARGET) * 100}%`
                   : `${(timer / timeLimit) * 100}%`,
-                background: isSolo ? logo.color : modeColor,
+                background: isSolo ? t.progressFill : modeColor,
               }}
             />
           </div>
         )}
 
-        {/* Compte à rebours — alerte visuelle DUO/TRIO quand il reste peu de temps */}
+        {/* Alerte DUO/TRIO quand il reste peu de temps */}
         {isPlaying && !isSolo && timer <= 5 && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
-            <span className="text-red-400 font-black text-2xl animate-pulse">
+            <span className={`${t.timerAlert} font-black text-2xl animate-pulse`}>
               ⚠️ {timer}s !
             </span>
           </div>

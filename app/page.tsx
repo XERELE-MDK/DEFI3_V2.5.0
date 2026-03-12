@@ -15,6 +15,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { THEME_LIST, THEMES, DEFAULT_THEME, type ThemeKey } from "@/lib/themes";
 
 // Polices définies comme constantes pour éviter la répétition
 const FONT_ARCADE = "'Black Ops One', cursive";
@@ -236,6 +237,10 @@ export default function HomePage() {
   // État pour l'effet de "glitch" sur le titre
   const [glitch, setGlitch] = useState(false);
 
+  // ── Thème sélectionné
+  const [selectedThemeKey, setSelectedThemeKey] = useState<ThemeKey>(DEFAULT_THEME);
+  const t = THEMES[selectedThemeKey]; // Raccourci vers les tokens du thème actif
+
   // ── Musique sélectionnée (arcade par défaut)
   const [selectedMusicIndex, setSelectedMusicIndex] = useState(0);
   const selectedMusic = MUSIC_TRACKS[selectedMusicIndex];
@@ -346,8 +351,8 @@ export default function HomePage() {
       `}</style>
 
       <main
-        className="min-h-screen bg-[#060d1a] text-white overflow-hidden relative flex flex-col"
-        style={{ fontFamily: "'Share Tech Mono', monospace" }}
+        className={`min-h-screen ${t.bg} ${t.text} overflow-hidden relative flex flex-col transition-colors duration-500`}
+        style={{ fontFamily: t.font }}
       >
 
         {/* ── Grille de fond rétro ─────────── */}
@@ -669,19 +674,73 @@ export default function HomePage() {
             />
           </p>
 
-          {/* ── Sélecteur de musique ④ ──────────
+          {/* ── Sélecteur de thème ④ ────────────
+              4 ambiances visuelles
+              Appliqué immédiatement + passé dans l'URL
+          ── */}
+          <div
+            className="w-full max-w-sm mb-6"
+            style={{ animation: "fadeSlideUp 0.5s 0.50s both" }}
+          >
+            <p
+              className={`${t.subtext} text-xs uppercase tracking-widest mb-3 text-center`}
+              style={{ fontFamily: FONT_MONO }}
+            >
+              ④ Thème
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              {THEME_LIST.map((theme) => (
+                <button
+                  key={theme.key}
+                  onClick={() => setSelectedThemeKey(theme.key)}
+                  className="relative flex flex-col items-center gap-1 py-3 px-1 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95"
+                  style={{
+                    background: selectedThemeKey === theme.key
+                      ? `${theme.color}20`
+                      : "rgba(30,41,59,0.6)",
+                    border: selectedThemeKey === theme.key
+                      ? `2px solid ${theme.border}`
+                      : "2px solid rgba(100,116,139,0.2)",
+                    boxShadow: selectedThemeKey === theme.key
+                      ? `0 0 12px ${theme.border}`
+                      : "none",
+                  }}
+                >
+                  <span className="text-base">{theme.emoji}</span>
+                  <span
+                    className="font-black tracking-wider"
+                    style={{
+                      fontFamily: FONT_MONO,
+                      fontSize: "8px",
+                      color: selectedThemeKey === theme.key ? theme.color : "#64748b",
+                    }}
+                  >
+                    {theme.name}
+                  </span>
+                  {selectedThemeKey === theme.key && (
+                    <span
+                      className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full"
+                      style={{ background: theme.color }}
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Sélecteur de musique ⑤ ──────────
               3 ambiances : Arcade / Lo-Fi / Epic
               Passée dans l'URL → lue par game-page.tsx
           ── */}
           <div
             className="w-full max-w-sm mb-8"
-            style={{ animation: "fadeSlideUp 0.5s 0.50s both" }}
+            style={{ animation: "fadeSlideUp 0.5s 0.55s both" }}
           >
             <p
-              className="text-slate-500 text-xs uppercase tracking-widest mb-3 text-center"
+              className={`${t.subtext} text-xs uppercase tracking-widest mb-3 text-center`}
               style={{ fontFamily: FONT_MONO }}
             >
-              ④ Musique
+              ⑤ Musique
             </p>
             <div className="grid grid-cols-3 gap-2">
               {MUSIC_TRACKS.map((track, index) => (
@@ -735,7 +794,7 @@ export default function HomePage() {
           >
             {/* Bouton JOUER — passe mode + logo + difficulté dans l'URL */}
             <Link
-              href={`/game?logo=${encodeURIComponent(selectedLogo.emoji)}&image=${encodeURIComponent(selectedLogo.image)}&color=${encodeURIComponent(selectedLogo.color)}&shadow=${encodeURIComponent(selectedLogo.shadow)}&difficulty=${selectedDiff.key}&moveInterval=${selectedDiff.moveInterval}&logoSize=${selectedDiff.logoSize}&mode=${selectedMode.key}&objects=${selectedMode.objects}&timeLimit=${selectedMode.timeLimit ?? 0}&music=${selectedMusic.key}`}
+              href={`/game?logo=${encodeURIComponent(selectedLogo.emoji)}&image=${encodeURIComponent(selectedLogo.image)}&color=${encodeURIComponent(selectedLogo.color)}&shadow=${encodeURIComponent(selectedLogo.shadow)}&difficulty=${selectedDiff.key}&moveInterval=${selectedDiff.moveInterval}&logoSize=${selectedDiff.logoSize}&mode=${selectedMode.key}&objects=${selectedMode.objects}&timeLimit=${selectedMode.timeLimit ?? 0}&music=${selectedMusic.key}&theme=${selectedThemeKey}`}
               className="btn-play font-arcade text-xl px-10 py-4 rounded-2xl tracking-wider text-black"
               style={{ background: selectedLogo.color }}
             >

@@ -14,6 +14,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTheme } from "@/hooks/use-theme";
 
 // ─────────────────────────────────────────────
 // 📦 TYPES
@@ -89,7 +90,10 @@ export default function LeaderboardPage() {
   const [isLoading, setIsLoading]     = useState(true);
   const [error, setError]             = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState("");
-  const [activeTab, setActiveTab]     = useState<Difficulty>("all"); // Onglet actif
+  const [activeTab, setActiveTab]     = useState<Difficulty>("all");
+
+  // Thème — lit localStorage (pas d'URL params sur cette page)
+  const { theme: t } = useTheme(); // Onglet actif
 
   // ── Charger le leaderboard selon l'onglet actif
   const fetchLeaderboard = async (difficulty: Difficulty = activeTab) => {
@@ -138,23 +142,24 @@ export default function LeaderboardPage() {
     ? "Meilleur" : hasOnlySolo ? "⏱ Temps" : "🎯 Score";
 
   return (
-    <main className="min-h-screen bg-[#0f172a] text-white font-mono">
+    <main className={`min-h-screen ${t.bg} ${t.text} transition-colors duration-500`}
+      style={{ fontFamily: t.font }}>
 
       {/* ── En-tête ── */}
-      <header className="bg-[#1e293b] border-b border-slate-700 px-4 py-4">
+      <header className={`${t.header} border-b px-4 py-4`}>
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black text-yellow-400 tracking-widest uppercase">
+            <h1 className={`text-2xl font-black ${t.accent} tracking-widest uppercase`}>
               🏆 Leaderboard
             </h1>
-            <p className="text-slate-400 text-xs mt-1">
+            <p className={`${t.subtext} text-xs mt-1`}>
               Classement global · toutes difficultés
             </p>
           </div>
           <button
             onClick={() => fetchLeaderboard(activeTab)}
             disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`flex items-center gap-2 px-3 py-2 ${t.badge} rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <span className={isLoading ? "animate-spin" : ""}>🔄</span>
             Actualiser
@@ -342,7 +347,7 @@ export default function LeaderboardPage() {
 
             {/* Dernière mise à jour */}
             {lastUpdated && (
-              <p className="text-center text-slate-600 text-xs mt-6">
+              <p className={`text-center ${t.footerText} text-xs mt-6`}>
                 Mis à jour à {lastUpdated} · Refresh auto toutes les 30s
               </p>
             )}
