@@ -503,7 +503,7 @@ La page d'accueil passe tous les choix via l'URL vers `/game` :
 - [x] 4 thèmes visuels — DARK / RETRO / NEON / PASTEL
 - [x] Leaderboard filtrable par difficulté avec badges SOLO/DUO/TRIO
 - [x] Optimisation mémoire Windows (`cross-env --max-old-space-size`)
-- [ ] Adaptation mobile complète (touch events, taille min objets)
+- [x] Adaptation mobile complète (touch events, taille min objets)
 - [ ] Publication en ligne (Vercel)
 
 ---
