@@ -518,6 +518,6 @@ Projet réalisé dans le cadre d'une formation en développement web.
 
 MIT — libre d'utilisation à des fins éducatives.
 =======
+
 # DEFI3_V2.5.0
 the 2.5 version of the game chasing the logo
->>>>>>> 391c8c45c47a1a2bdfdd3a04541e72c0d8bfcec7
